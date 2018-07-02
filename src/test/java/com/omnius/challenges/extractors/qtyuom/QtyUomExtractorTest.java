@@ -1,5 +1,12 @@
 package com.omnius.challenges.extractors.qtyuom;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -207,12 +214,61 @@ public class QtyUomExtractorTest extends Assert{
         assertNull(result);
     }
     
-    @Test
-    public void computeAccuracy_checkIsHigherThan20Percent() {
-        // Load provided CSV
-        // For each line in the CSV run the LeftMostUOMExtractor
-        // calculate how many corrected guess your algorithm compute
-        // Assert the accuracy higher than 20%
-    }
+	/**
+	 * The heuristics approach for accuracy checks against the following
+	 * description: UOM with at least one space on each side and at least one digit
+	 * to the left of the UOM, after the space(s) preceding the UOM.
+	 * 
+	 * The heuristics approach counts correct answers when: 1. The line does not
+	 * contain a description and the Pair is null. 2. The line contains one or more
+	 * descriptions and the description with the highest UOM priority contains the
+	 * UOM of the Pair.
+	 * 
+	 * Accuracy with these heuristics is 99.7977
+	 */
+	@Test
+	public void computeAccuracy_checkIsHigherThan20Percent() throws IOException {
+
+        String path = "C:\\Users\\lache\\eclipse-workspace\\qty_uom_extractor_specs_master\\qty-uom-extractor-specs-master\\src\\test\\resources\\qty_uom_challenge_dataset_clean.csv";
+		FileReader reader = null;
+		BufferedReader bufferedReader = null;
+		try {
+			reader = new FileReader(path);
+			bufferedReader = new BufferedReader(reader);
+
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		String line = null;
+		int counter_HeuristicsMatches = 0;
+		int counterLine = 0;
+		while ((line = bufferedReader.readLine()) != null) {
+			QtyUomExtractor matcher = new LeftMostUOMExtractor();
+			Pair<String, String> result = matcher.extract(line);
+			counterLine++;
+
+			String firstMatch = null;
+			for (String str : LeftMostUOMExtractor.UOM) {
+				if (str.contains("(n)")) {
+					str = str.substring(0, str.length() - 3) + "\\(n\\)";
+				}
+				Pattern p = Pattern.compile("\\d+\\s+" + str + "\\s+", Pattern.CASE_INSENSITIVE);
+				Matcher m = p.matcher(line);
+
+				if (m.find()) {
+					firstMatch = m.group();
+					break;
+				}
+			}
+
+			if (firstMatch == null && result == null) {
+				counter_HeuristicsMatches++;
+			} else if (firstMatch.toUpperCase().contains(result.getSecond().toUpperCase())) {
+				counter_HeuristicsMatches++;
+			}
+		}
+		double accuracy = ((double) counter_HeuristicsMatches / counterLine) * 100;
+		Assert.assertTrue(accuracy > 20);
+	}
 }
 
