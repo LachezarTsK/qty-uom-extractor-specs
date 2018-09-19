@@ -20,7 +20,7 @@ import com.omnius.challenges.extractors.qtyuom.utils.Pair;
 public class LeftMostUOMExtractor implements QtyUomExtractor {
 
     /**
-     * Array of valid UOM to match. the elements with lower index in the array has higher priority
+     * Array of valid UOM to match. The elements with lower index in the array have higher priority
      */
     public static String[] UOM = {"stk", "stk.", "stck", "stück", "stg", "stg.", "st", "st.", "stange", "stange(n)", "tafel", "tfl", "taf", "mtr", "meter", "qm", "kg", "lfm", "mm", "m"};
     
